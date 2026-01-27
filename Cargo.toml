@@ -4,3 +4,28 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+anyhow = "1"
+thiserror = "1"
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+directories = "5"
+log = "0.4"
+env_logger = "0.11"
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+regex = "1"
+glob = "0.3"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+walkdir = "2"
+
+[features]
+default = []
+# Enable experimental local LLM via Candle when you have the model files.
+local-llm = [
+    "dep:candle-core",
+]
+
+[dependencies.candle-core]
+optional = true
+version = "0.6"
