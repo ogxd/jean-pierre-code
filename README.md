@@ -1,6 +1,6 @@
 # jean-pierre-code
 
-Agentic AI CLI code assistant (no TUI). Uses a local lightweight planner (feature-gated Candle integration planned) to gather context and propose actions, while delegating heavyweight reasoning to a remote model endpoint you control. Classic CLI UX.
+Agentic AI CLI code assistant (no TUI). Uses a local planner powered by Kalosm (always on) to gather context and propose actions, while optionally delegating heavyweight reasoning to a remote model endpoint you control. Classic CLI UX.
 
 Current status: early scaffold (MVP). Compiles without any model weights or remote endpoint. You can:
 - Initialize config: `jpc init`
@@ -13,13 +13,15 @@ Current status: early scaffold (MVP). Compiles without any model weights or remo
 Install
 1. Ensure Rust toolchain installed (stable).
 2. Build:
-   - Default (no local LLM weights needed):
+   - Default:
      ```bash
      cargo build --release
      ```
-   - With experimental local LLM feature (Candle stub; you must add actual model code later):
+   Notes:
+   - Local inference uses [Kalosm](https://github.com/floneum/floneum/tree/main/interfaces/kalosm) and will initialize a tiny Llama model on first use. No separate runtime (like Ollama) is required.
+   - If you build from a clean environment, Cargo will fetch Kalosm from Git. The `full` feature set may require a recent Rust toolchain. If you encounter a compiler version error, run:
      ```bash
-     cargo build --release --features local-llm
+     rustup update stable
      ```
 
 Usage
@@ -39,7 +41,7 @@ Configuration
 - Env vars override config file values:
   - `JPC_REMOTE_ENDPOINT` – HTTP endpoint for remote model
   - `JPC_API_KEY` – Bearer token for remote HTTP
-  - `JPC_MODEL` – Model name sent to the remote
+  - `JPC_MODEL` – Model name (used by the remote endpoint; local Kalosm planner currently uses its default embedded model).
   - `JPC_PROJECT_ROOT` – Project root path
 
 Remote model API
@@ -52,8 +54,8 @@ Expected response is either:
 - a plain text body with the output.
 
 Local planner
-- Default: a heuristic planner that makes simple plans (e.g., editing README).
-- Future: enable `local-llm` feature to integrate Candle (HuggingFace candle) for local context summarization and planning.
+- Always-on local LLM via Kalosm (Llama). No external runtime required.
+- The planner prompts the model to output a strict JSON plan. If parsing fails or inference errors occur, it gracefully falls back to a simple heuristic plan.
 
 Context gathering
 - Gathers `Cargo.toml`, `Cargo.lock`, `src/` (and `tests/` if present), with size limits.
@@ -63,7 +65,7 @@ Safety
 - Applying a plan that writes to an existing file creates a timestamped backup under `./.jpc/backups/`.
 
 Roadmap
-- Add Candle-backed tiny LLM for summarization/planning behind `local-llm` feature.
+- Optional: add model selection and streaming UX for Kalosm planner.
 - Expand action set (patch/hunk edits, multi-file diffs, run sequences).
 - Streaming remote responses.
 - Better prompting & context windows.
